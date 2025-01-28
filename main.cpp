@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <omp.h>
 
-double run(int64_t N) {
+inline double run(int64_t N) {
 	int i, j, k;
 
 	// Initialize Matrices
@@ -54,15 +54,20 @@ double run(int64_t N) {
 
 int main(int argc, char* argv[]) {
 
-	int64_t N = 2000;
+	int64_t N = 1000;
 	if (argc > 1) N = std::stoi(std::string(argv[1]));
+	int trials_per_size = 10;
+	int step = 100;
 
-	for (int64_t i = 1; i < N/100; i += 1) {
-		double dt = run(i * 100);
-		int64_t flops = i * i * i * 1e6;
-		std::cout << "Size: " << i * 100 << std::endl;
+	for (int64_t i = step; i < N; i += step) {
+		double dt = 0.0;
+		for (int j = 0; j < trials_per_size; j++) {
+			dt += run(i);
+		}
+		int64_t flops = (2 * i - 1) * i * i * trials_per_size;
+		std::cout << "Size: " << i << std::endl;
 		std::cout << "Time: " << dt << std::endl;
-		std::cout << flops / (1000000000 * dt) << "Gflops\n";
+		std::cout << flops / (1000000000 * dt) << " Gflops\n";
 		std::cout << "----------\n";
 	}
 
