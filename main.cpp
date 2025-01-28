@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <omp.h>
 
-inline double run(int64_t N) {
-	int i, j, k;
+inline double run(int64_t N, int num_trials) {
+	int i, j, k, trial;
 
 	// Initialize Matrices
 	float** A, ** B, ** C;
@@ -30,18 +30,25 @@ inline double run(int64_t N) {
 		}
 	}
 
-	double t0 = omp_get_wtime();
+	trial = 0;
+	double output = 0.0;
 
-	//Multiply A * B
-	for (i = 0; i < N; i++) {
-		for (j = 0; j < N; j++) {
-			for (k = 0; k < N; k++) {
-				C[i][j] += (A[i][k] * B[k][j]);
+	while (trial < num_trials) {
+		double t0 = omp_get_wtime();
+
+		//Multiply A * B
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++) {
+				for (k = 0; k < N; k++) {
+					C[i][j] += (A[i][k] * B[k][j]);
+				}
 			}
 		}
-	}
 
-	double t1 = omp_get_wtime();
+		double t1 = omp_get_wtime();
+		output += (t1 - t0);
+		trial++;
+	}
 
 	for (i = 0; i < N; i++) {
 		delete[] A[i];
@@ -49,7 +56,7 @@ inline double run(int64_t N) {
 		delete[] C[i];
 	}
 
-	return t1 - t0;
+	return output;
 }
 
 int main(int argc, char* argv[]) {
@@ -60,10 +67,7 @@ int main(int argc, char* argv[]) {
 	int step = 100;
 
 	for (int64_t i = step; i < N; i += step) {
-		double dt = 0.0;
-		for (int j = 0; j < trials_per_size; j++) {
-			dt += run(i);
-		}
+		double dt = run(i, trials_per_size);
 		int64_t flops = (2 * i - 1) * i * i * trials_per_size;
 		std::cout << "Size: " << i << std::endl;
 		std::cout << "Time: " << dt << std::endl;
