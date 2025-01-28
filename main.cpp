@@ -41,20 +41,21 @@ inline double run(int64_t N, int num_trials) {
 		C[i] = new float[N];
 	}
 
-	// Fill with random numbers
-	std::srand(static_cast<unsigned int>(omp_get_wtime()));
-	for (i = 0; i < N; i++) {
-		for (j = 0; j < N; j++) {
-			A[i][j] = static_cast<float>(std::rand());
-			B[i][j] = static_cast<float>(std::rand());
-			C[i][j] = 0;
-		}
-	}
-
 	trial = 0;
 	double output = 0.0;
 
 	while (trial < num_trials) {
+
+		// Fill with random numbers
+		std::srand(static_cast<unsigned int>(omp_get_wtime()));
+		for (i = 0; i < N; i++) {
+			for (j = 0; j < N; j++) {
+				A[i][j] = static_cast<float>(std::rand());
+				B[i][j] = static_cast<float>(std::rand());
+				C[i][j] = 0;
+			}
+		}
+
 		double t0 = omp_get_wtime();
 
 		//Multiply A * B
