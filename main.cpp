@@ -5,6 +5,27 @@
 #include <cstdint>
 #include <omp.h>
 
+// multithreaded lower triangular matrix multiplication - not being used yet
+void matmul(const float* B, const float* C, float* A, size_t N) {
+	omp_set_num_threads(6);
+	#pragma omp parallel
+	{
+		#pragma omp for schedule(static, 2)
+		for (size_t i = 0; i < N; i++) {
+			size_t ii = i * (i+1) / 2;
+			for (size_t j = 0; j <= i; j++) {
+				double sum = 0.0;
+				for (size_t k = j; k <= i; k++) {
+					size_t kk = k * (k+1) / 2;
+					sum += B[ii + k] * C[kk + j];
+				}
+				A[ii + j] = sum;
+			}
+		}
+	}
+}
+
+// Initializes and multiplies N x N matrices. Returns the amount of time taken.
 inline double run(int64_t N, int num_trials) {
 	int i, j, k, trial;
 
@@ -64,12 +85,12 @@ int main(int argc, char* argv[]) {
 	int64_t N = 1000;
 	if (argc > 1) N = std::stoi(std::string(argv[1]));
 	int trials_per_size = 10;
-	int step = 100;
+	int step = 200;
 
 	for (int64_t i = step; i < N; i += step) {
 		double dt = run(i, trials_per_size);
 		int64_t flops = (2 * i - 1) * i * i * trials_per_size;
-		std::cout << "Size: " << i << std::endl;
+		std::cout << "Array Size: " << i << std::endl;
 		std::cout << "Time: " << dt << std::endl;
 		std::cout << flops / (1000000000 * dt) << " Gflops\n";
 		std::cout << "----------\n";
@@ -77,6 +98,8 @@ int main(int argc, char* argv[]) {
 
 
 /*
+	Code for writing a matrix to a file
+
 	std::ofstream f;
 	f.open("Matrix_output.txt");
 	for (i = 0; i < N; i++) {
@@ -87,9 +110,6 @@ int main(int argc, char* argv[]) {
 	}
 	f.close();
 */
-
-
-
 
 
 	return 0;
