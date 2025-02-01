@@ -7,9 +7,10 @@
 
 // multithreaded lower triangular matrix multiplication - not being used yet
 void matmul(const float* B, const float* C, float* A, size_t N) {
-	omp_set_num_threads(6);
+	int num_threads = 1;
 	#pragma omp parallel
 	{
+		num_threads = omp_get_num_threads();
 		#pragma omp for schedule(static, 2)
 		for (size_t i = 0; i < N; i++) {
 			size_t ii = i * (i+1) / 2;
@@ -84,9 +85,16 @@ inline double run(int64_t N, int num_trials) {
 int main(int argc, char* argv[]) {
 
 	int64_t N = 1000;
-	if (argc > 1) N = std::stoi(std::string(argv[1]));
 	int trials_per_size = 10;
 	int step = 200;
+
+	if (argc > 1) {	
+		N = std::stoi(std::string(argv[1]));
+		if ( argc > 2 ) {
+			step = std::stoi( std::string(argv[2]) );
+		}
+	}
+	
 
 	for (int64_t i = step; i < N; i += step) {
 		double dt = run(i, trials_per_size);
