@@ -6,24 +6,22 @@
 #include <omp.h>
 
 // multithreaded lower triangular matrix multiplication - not being used yet
-void matmul(const float* B, const float* C, float* A, size_t N) {
-	int num_threads = 1;
+void matmul(float** A, float** B, float** C, size_t N) {
+	//int num_threads = 1;
 	#pragma omp parallel
 	{
-		num_threads = omp_get_num_threads();
+		//num_threads = omp_get_num_threads();
 		#pragma omp for schedule(static, 2)
 		for (size_t i = 0; i < N; i++) {
-			size_t ii = i * (i+1) / 2;
-			for (size_t j = 0; j <= i; j++) {
-				double sum = 0.0;
-				for (size_t k = j; k <= i; k++) {
-					size_t kk = k * (k+1) / 2;
-					sum += B[ii + k] * C[kk + j];
+			for (size_t j = 0; j < N; j++) {
+				C[i][j] = 0.0;
+				for (size_t k = 0; k < N; k++) {
+					C[i][j] += (A[i][k] * B[k][j]);
 				}
-				A[ii + j] = sum;
 			}
 		}
 	}
+
 }
 
 // Initializes and multiplies N x N matrices. Returns the amount of time taken.
@@ -58,16 +56,7 @@ inline double run(int64_t N, int num_trials) {
 		}
 
 		double t0 = omp_get_wtime();
-
-		//Multiply A * B
-		for (i = 0; i < N; i++) {
-			for (j = 0; j < N; j++) {
-				for (k = 0; k < N; k++) {
-					C[i][j] += (A[i][k] * B[k][j]);
-				}
-			}
-		}
-
+		matmul(A, B, C, N);
 		double t1 = omp_get_wtime();
 		output += (t1 - t0);
 		trial++;
