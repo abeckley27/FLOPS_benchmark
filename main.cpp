@@ -5,13 +5,32 @@
 #include <cstdint>
 #include <omp.h>
 
-// multithreaded lower triangular matrix multiplication - not being used yet
+// multithreaded lower triangular matrix multiplication
 void matmul(float** A, float** B, float** C, size_t N) {
 	//int num_threads = 1;
 	#pragma omp parallel
 	{
 		//num_threads = omp_get_num_threads();
-		#pragma omp for schedule(static, 2)
+		#pragma omp for schedule(dynamic, 1)
+		for (size_t i = 0; i < N; i++) {
+			for (size_t j = 0; j < N; j++) {
+				C[i][j] = 0.0;
+				for (size_t k = 0; k < N; k++) {
+					C[i][j] += (A[i][k] * B[k][j]);
+				}
+			}
+		}
+	}
+
+}
+
+// version for double precision arithmetic
+void matmul(double** A, double** B, double** C, size_t N) {
+	//int num_threads = 1;
+	#pragma omp parallel
+	{
+		//num_threads = omp_get_num_threads();
+		#pragma omp for schedule(dynamic, 1)
 		for (size_t i = 0; i < N; i++) {
 			for (size_t j = 0; j < N; j++) {
 				C[i][j] = 0.0;
