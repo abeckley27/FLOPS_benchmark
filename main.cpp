@@ -5,8 +5,23 @@
 #include <cstdint>
 #include <omp.h>
 
+
+
+// Write a matrix to a file
+void print_matrix(float** A, size_t N, std::string filename = "matrix_output.txt") {
+	std::ofstream f;
+	f.open(filename);
+	for (int i = 0; i < N; i++) {
+		for (int j = 0; j < N; j++) {
+			f << A[i][j] << ' ';
+		}
+		f << std::endl;
+	}
+	f.close();
+}
+
 // multithreaded lower triangular matrix multiplication
-void matmul(float** A, float** B, float** C, size_t N) {
+inline void matmul(float** A, float** B, float** C, size_t N) {
 	//int num_threads = 1;
 	#pragma omp parallel
 	{
@@ -68,8 +83,8 @@ inline double run(int64_t N, int num_trials) {
 		std::srand(static_cast<unsigned int>(omp_get_wtime()));
 		for (i = 0; i < N; i++) {
 			for (j = 0; j < N; j++) {
-				A[i][j] = static_cast<float>(std::rand());
-				B[i][j] = static_cast<float>(std::rand());
+				A[i][j] = static_cast<float>(std::rand()) / RAND_MAX;
+				B[i][j] = static_cast<float>(std::rand()) / RAND_MAX;
 				C[i][j] = 0;
 			}
 		}
@@ -80,6 +95,10 @@ inline double run(int64_t N, int num_trials) {
 		output += (t1 - t0);
 		trial++;
 	}
+
+	//print_matrix(A, N, "A.txt");
+	//print_matrix(B, N, "B.txt");
+	//print_matrix(C, N, "C.txt");
 
 	for (i = 0; i < N; i++) {
 		delete[] A[i];
@@ -92,41 +111,30 @@ inline double run(int64_t N, int num_trials) {
 
 int main(int argc, char* argv[]) {
 
-	int64_t N = 1000;
-	int trials_per_size = 10;
+	int64_t upper_limit = 1000;
+	int trials_per_size = 4;
 	int step = 200;
 
 	if (argc > 1) {	
-		N = std::stoi(std::string(argv[1]));
-		if ( argc > 2 ) {
-			step = std::stoi( std::string(argv[2]) );
-		}
+		upper_limit = std::stoi(std::string(argv[1]));
+	}
+	if ( argc > 2 ) {
+		step = std::stoi( std::string(argv[2]) );
+	}	
+	if ( argc > 3 ) {
+		trials_per_size = std::stoi( std::string(argv[3]) );
 	}
 	
+	std::cout << "Running " << trials_per_size << " multiplications at each size \n";
 
-	for (int64_t i = step; i < N; i += step) {
+	for (int64_t i = step; i <= upper_limit; i += step) {
 		double dt = run(i, trials_per_size);
 		int64_t flops = (2 * i - 1) * i * i * trials_per_size;
-		std::cout << "Array Size: " << i << std::endl;
+		std::cout << "Array Size: " << i << " x " << i << std::endl;
 		std::cout << "Time: " << dt << std::endl;
 		std::cout << flops / (1000000000 * dt) << " Gflops\n";
 		std::cout << "----------\n";
 	}
-
-
-/*
-	Code for writing a matrix to a file
-
-	std::ofstream f;
-	f.open("Matrix_output.txt");
-	for (i = 0; i < N; i++) {
-		for (j = 0; j < N; j++) {
-			f << C[i][j] << ' ';
-		}
-		f << std::endl;
-	}
-	f.close();
-*/
 
 
 	return 0;
